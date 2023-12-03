@@ -74,11 +74,11 @@ class Token:
 
 class Lexer:
     def __init__(self, fn, text):
-     self.fn = fn
-     self.text = text
-     self.pos = Position(-1, 0, -1, fn, text)
-     self.current_char = None
-     self.advance()
+          self.fn = fn
+          self.text = text
+          self.pos = Position(-1, 0, -1, fn, text)
+          self.current_char = None
+          self.advance()
     
     def advance(self): #move position until the end of the character and if its the end, none
          self.pos.advance(self.current_char)
@@ -111,9 +111,6 @@ class Lexer:
                    self.advance()
               elif self.current_char == ')':
                    tokens.append(Token(TT_RPAREN, pos_start = self.pos))
-                   self.advance()
-              elif self.current_char == '&':
-                   tokens.append(Token(TT_AND))
                    self.advance()
               else:
                    pos_start = self.pos.copy()
@@ -183,7 +180,7 @@ class ParseResult:
           return self
      def failure(self,error):
           self.error = error
-          return error
+          return self
 
 #parser
 class Parser:
@@ -202,7 +199,7 @@ class Parser:
           res = self.expr()
           if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
-                 self.current_tok.pos_start, self.current_tok_end,
+                 self.current_tok.pos_start, self.current_tok.pos_end,
                  "Expected '+', '-', '*' or '/'"
             ))   
           return res
