@@ -5,7 +5,7 @@ while True:
     result, error = basic.run('<stdin>',text)
 
     if error: print(error.as_string())
-    elif result: print(result)
+    elif result: print(repr(result))
     
     
     #menit 9:25var = 5
