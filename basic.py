@@ -339,11 +339,11 @@ class StringNode:
      def __repr__(self):
           return f'{self.tok}'
 class ListNode:
-    def __init__(self,element_nodes, pos_start, pos_end):
-        self.element_nodes= element_nodes
-        
-        self.pos_start = pos_start
-        self.pos_end = pos_end
+  def __init__(self, element_nodes, pos_start, pos_end):
+    self.element_nodes = element_nodes
+
+    self.pos_start = pos_start
+    self.pos_end = pos_end
         
         
         
@@ -684,11 +684,12 @@ class Parser:
 		res = ParseResult()
 		element_nodes = []
 		pos_start = self.current_tok.pos_start.copy()
+
 		if self.current_tok.type != TT_LSQUARE:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
 				f"Expected '['"
-			))
+		))
 
 		res.register_advancement()
 		self.advance()
@@ -698,31 +699,32 @@ class Parser:
 			self.advance()
 		else:
 			element_nodes.append(res.register(self.expr()))
-			if res.error:
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					"Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[', or 'NOT'"
-				))
+		if res.error:
+			return res.failure(InvalidSyntaxError(
+			self.current_tok.pos_start, self.current_tok.pos_end,
+			"Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+			))
 
-			while self.current_tok.type == TT_COMMA:
-				res.register_advancement()
-				self.advance()
-
-				element_nodes.append(res.register(self.expr()))
-				if res.error: return res
-
-			if self.current_tok.type != TT_RSQUARE:
-				return res.failure(InvalidSyntaxError(
-					self.current_tok.pos_start, self.current_tok.pos_end,
-					f"Expected ',' or ')'"
-				))
-
+		while self.current_tok.type == TT_COMMA:
 			res.register_advancement()
-			self.advance()      
+			self.advance()
+
+			element_nodes.append(res.register(self.expr()))
+			if res.error: return res
+
+		if self.current_tok.type != TT_RSQUARE:
+			return res.failure(InvalidSyntaxError(
+			self.current_tok.pos_start, self.current_tok.pos_end,
+			f"Expected ',' or ']'"
+			))
+
+		res.register_advancement()
+		self.advance()
+
 		return res.success(ListNode(
-			element_nodes,
-			pos_start,
-			self.current_tok.pos_end.copy()
+		element_nodes,
+		pos_start,
+		self.current_tok.pos_end.copy()
 		))
 			
 
@@ -1209,63 +1211,59 @@ class String(Value):
 	def __repr__(self):
 		return f'"{self.value}"'
 class List(Value):
-    def __init__(self,elements):
-        super().__init__()
-        self.elements = elements
-    def added_to(self,other):
-        new_list = self.copy()
-        new_list.elements.append(other)
+  def __init__(self, elements):
+    super().__init__()
+    self.elements = elements
+
+  def added_to(self, other):
+    new_list = self.copy()
+    new_list.elements.append(other)
+    return new_list, None
+
+  def subbed_by(self, other):
+    if isinstance(other, Number):
+      new_list = self.copy()
+      try:
+        new_list.elements.pop(other.value)
         return new_list, None
-    
-    def subbed_by(self, other):
-        if isinstance(other, Number):
-            new_list = self.copy()
-            try:
-                new_list.elements.pop(other.value)
-                return new_list, None
-            except:
-                return None, RTError(
-					other.pos_start, other.pos_end,
-					'element at this index could not be removed from the list because index is out of bounds',
-					self.context	
-				)
-            
-        else:
-            return None, Value.illegal_operation(self, other)
-            
-    def multed_by(self, other):
-        if isinstance(other, list):
-            new_list = self.copy()
-            new_list.elements.extend(other.elements)
-            return new_list,None
-            
-        else:
-            return None, Value.illegal_operation(self,other)
-        
-    def dived_by(self, other):
-        if isinstance(other, Number):
-            try:
-                return self.elements[other.value], None
-            except:
-                return None, RTError(
-					other.pos_start, other.pos_end,
-					'element at this index could not be retrieved from the list because index is out of bounds',
-					self.context	
-				)
-            
-        else:
-            return None, Value.illegal_operation(self, other)
-        
-    def copy(self):
-        copy = List(self.elements[:])
-        copy.set_pos(self.pos_start, self.pos_end)
-        copy.set_context(self.context)
-        
-        return copy
-    
-    def __repr__(self):
-        return f'[{", ".join([str(x) for x in self.elements])}]'
-    
+      except:
+        return None, RTError(
+          other.pos_start, other.pos_end,
+          'Element at this index could not be removed from list because index is out of bounds',
+          self.context
+        )
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def multed_by(self, other):
+    if isinstance(other, List):
+      new_list = self.copy()
+      new_list.elements.extend(other.elements)
+      return new_list, None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def dived_by(self, other):
+    if isinstance(other, Number):
+      try:
+        return self.elements[other.value], None
+      except:
+        return None, RTError(
+          other.pos_start, other.pos_end,
+          'Element at this index could not be retrieved from list because index is out of bounds',
+          self.context
+        )
+    else:
+      return None, Value.illegal_operation(self, other)
+  
+  def copy(self):
+    copy = List(self.elements[:])
+    copy.set_pos(self.pos_start, self.pos_end)
+    copy.set_context(self.context)
+    return copy
+
+  def __repr__(self):
+    return f'[{", ".join([str(x) for x in self.elements])}]'
 class Function(Value):
 	def __init__(self, name, body_node, arg_names):
 		super().__init__()
@@ -1313,94 +1311,110 @@ class Function(Value):
 		return f"<function {self.name}>"
 
      
-class Number:
-     def __init__(self, value):
-          self.value = value
-          self.set_pos()
-          self.set_context()
-        
-     def set_pos(self, pos_start=None, pos_end=None):
-          self.pos_start = pos_start
-          self.pos_end = pos_end
-          return self
-     
-     def set_context(self, context=None):
-          self.context = context
-          return self
-     
-     def added_to(self, other):
-          if isinstance(other, Number):
-               return Number(self.value + other.value).set_context(self.context), None
-       
-     def subbed_by(self, other):
-        if isinstance(other, Number):
-            return Number(self.value - other.value).set_context(self.context), None
-       
-     def multed_by(self, other):
-        if isinstance(other, Number):
-            return Number(self.value * other.value).set_context(self.context), None
-     
-     def dived_by(self, other):
-        if isinstance(other, Number):
-            if other.value == 0:
-                return None, RTError(
-                    other.pos_start, other.pos_end,
-                    'Division by zero',
-                    self.context
-                )
+class Number(Value):
+  def __init__(self, value):
+    super().__init__()
+    self.value = value
 
-            return Number(self.value / other.value).set_context(self.context), None
-       
-     def powed_by(self,other):
-        if isinstance(other, Number):
-             return Number(self.value ** other.value).set_context(self.context), None
-     
-     def get_comparison_eq(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value == other.value)).set_context(self.context), None
-     def get_comparison_ne(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value != other.value)).set_context(self.context), None
-     def get_comparison_lt(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value < other.value)).set_context(self.context), None
+  def added_to(self, other):
+    if isinstance(other, Number):
+      return Number(self.value + other.value).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
 
-     def get_comparison_gt(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value > other.value)).set_context(self.context), None
+  def subbed_by(self, other):
+    if isinstance(other, Number):
+      return Number(self.value - other.value).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
 
-     def get_comparison_lte(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value <= other.value)).set_context(self.context), None
+  def multed_by(self, other):
+    if isinstance(other, Number):
+      return Number(self.value * other.value).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
 
-     def get_comparison_gte(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value >= other.value)).set_context(self.context), None
+  def dived_by(self, other):
+    if isinstance(other, Number):
+      if other.value == 0:
+        return None, RTError(
+          other.pos_start, other.pos_end,
+          'Division by zero',
+          self.context
+        )
 
-     def anded_by(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value and other.value)).set_context(self.context), None
-     def ored_by(self, other):
-          if isinstance(other, Number):
-               return Number(int(self.value or other.value)).set_context(self.context), None
-     def notted(self, other):
-          if isinstance(other, Number):
-               return Number(1 if self.value== 0 else 0).set_context(self.context), None
-          
-     def is_true(self):
-          return self.value != 0
+      return Number(self.value / other.value).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
 
+  def powed_by(self, other):
+    if isinstance(other, Number):
+      return Number(self.value ** other.value).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
 
-          #########################################13.05
-     def copy(self):
-          copy = Number(self.value)
-          copy.set_pos(self.pos_start, self.pos_end)
-          copy.set_context(self.context)
-          return copy
-             
-     
-     def __repr__(self):
-        return str(self.value)
+  def get_comparison_eq(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value == other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def get_comparison_ne(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value != other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def get_comparison_lt(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value < other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def get_comparison_gt(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value > other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def get_comparison_lte(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value <= other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def get_comparison_gte(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value >= other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def anded_by(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value and other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def ored_by(self, other):
+    if isinstance(other, Number):
+      return Number(int(self.value or other.value)).set_context(self.context), None
+    else:
+      return None, Value.illegal_operation(self, other)
+
+  def notted(self):
+    return Number(1 if self.value == 0 else 0).set_context(self.context), None
+
+  def copy(self):
+    copy = Number(self.value)
+    copy.set_pos(self.pos_start, self.pos_end)
+    copy.set_context(self.context)
+    return copy
+
+  def is_true(self):
+    return self.value != 0
+  
+  def __repr__(self):
+    return str(self.value)
 
 
 #context
