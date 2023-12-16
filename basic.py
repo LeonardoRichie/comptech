@@ -224,22 +224,19 @@ class Lexer:
 			escape_characters = {
 				'n': '\n',
 				't': '\t'
-
 			}
 
-			while self.current_char != None and self.current_char != '"' or escape_character:
+			while self.current_char != None and (self.current_char != '"' or escape_character):
 				if escape_character:
 					string += escape_characters.get(self.current_char, self.current_char)
-
 				else:
-
 					if self.current_char == '\\':
-						escape_character =  True
+						escape_character = True
 					else:
 						string += self.current_char
 				self.advance()
-				escape_character: False
-
+				escape_character = False
+			
 			self.advance()
 			return Token(TT_STRING, string, pos_start, self.pos)
 		
@@ -1139,7 +1136,7 @@ class String(Value):
 		copy.set_context(self.context)
 		return copy
 	def __repr__(self):
-		return f'"{self.value}'
+		return f'"{self.value}"'
 
 
 class Function(Value):
