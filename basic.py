@@ -148,13 +148,13 @@ class Lexer:#lexing
     self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
   def make_tokens(self):
-    tokens = []
+    tokens = []#IDENTIFY EACH CHARACTER
 
     while self.current_char != None:
       if self.current_char in ' \t':
         self.advance()
       elif self.current_char == '#': #comment
-        self.skip_comment()
+        self.skip_comment() #SKIPMCOMMENT
       elif self.current_char in ';\n':#newline
         tokens.append(Token(TOKEN_NEWLINE, pos_start=self.pos))
         self.advance()
@@ -213,6 +213,7 @@ class Lexer:#lexing
     return tokens, None
 
   def make_number(self):
+    #number detector, if there are more . this means float
     num_str = ''
     dot_count = 0
     pos_start = self.pos.copy()
@@ -235,10 +236,12 @@ class Lexer:#lexing
     escape_character = False
     self.advance()
 
+
     escape_characters = {
       'n': '\n',
       't': '\t'
-    }
+    }#newline code
+
 
     while self.current_char != None and (self.current_char != '"' or escape_character):
       if escape_character:
@@ -257,6 +260,7 @@ class Lexer:#lexing
   def make_identifier(self):
     id_str = ''
     pos_start = self.pos.copy()
+
 
     while self.current_char != None and self.current_char in LETTERS_DIGITS + '_':
       id_str += self.current_char
@@ -327,10 +331,6 @@ class Lexer:#lexing
       self.advance()
 
     self.advance()
-
-#######################################
-# NODES
-#######################################
 
 class NumberNode:
   def __init__(self, tok):
@@ -1217,13 +1217,11 @@ class Parser:
 
     return res.success(left)
 
-#######################################
-# RUNTIME RESULT
-#######################################
+
 
 class RTResult:
   def __init__(self):
-    self.reset()
+    self.reset() #runtime result
 
   def reset(self):
     self.value = None
@@ -1273,10 +1271,7 @@ class RTResult:
       self.loop_should_break
     )
 
-#######################################
-# VALUES
-#######################################
-
+#value
 class Value:
   def __init__(self):
     self.set_pos()
@@ -1837,9 +1832,6 @@ BuiltInFunction.extend      = BuiltInFunction("extend")
 BuiltInFunction.len					= BuiltInFunction("len")
 BuiltInFunction.run					= BuiltInFunction("run")
 
-#######################################
-# CONTEXT
-#######################################
 
 class Context:
   def __init__(self, display_name, parent=None, parent_entry_pos=None):
@@ -1848,9 +1840,6 @@ class Context:
     self.parent_entry_pos = parent_entry_pos
     self.symbol_table = None
 
-#######################################
-# SYMBOL TABLE
-#######################################
 
 class SymbolTable:
   def __init__(self, parent=None):
@@ -1869,11 +1858,8 @@ class SymbolTable:
   def remove(self, name):
     del self.symbols[name]
 
-#######################################
-# INTERPRETER
-#######################################
 
-class Interpreter:
+class Interpreter:#interpreter
   def visit(self, node, context):
     method_name = f'visit_{type(node).__name__}'
     method = getattr(self, method_name, self.no_visit_method)
@@ -2117,36 +2103,33 @@ class Interpreter:
     
     return res.success_return(value)
 
-  def visit_ContinueNode(self, node, context):
+  def visit_ContinueNode(self):
     return RTResult().success_continue()
 
-  def visit_BreakNode(self, node, context):
+  def visit_BreakNode(self):
     return RTResult().success_break()
 
-#######################################
-# RUN
-#######################################
-
-global_symbol_table = SymbolTable()
-global_symbol_table.set("NULL", Number.null)
-global_symbol_table.set("FALSE", Number.false)
-global_symbol_table.set("TRUE", Number.true)
-global_symbol_table.set("MATH_PI", Number.math_PI)
-global_symbol_table.set("pr", BuiltInFunction.print)
-global_symbol_table.set("pr_RET", BuiltInFunction.print_ret)
-global_symbol_table.set("INPUT", BuiltInFunction.input)
-global_symbol_table.set("INPUT_INT", BuiltInFunction.input_int)
-global_symbol_table.set("CLEAR", BuiltInFunction.clear)
-global_symbol_table.set("CLS", BuiltInFunction.clear)
-global_symbol_table.set("IS_NUM", BuiltInFunction.is_number)
-global_symbol_table.set("IS_STR", BuiltInFunction.is_string)
-global_symbol_table.set("IS_LIST", BuiltInFunction.is_list)
-global_symbol_table.set("IS_FUN", BuiltInFunction.is_function)
-global_symbol_table.set("APPEND", BuiltInFunction.append)
-global_symbol_table.set("POP", BuiltInFunction.pop)
-global_symbol_table.set("EXTEND", BuiltInFunction.extend)
-global_symbol_table.set("LEN", BuiltInFunction.len)
-global_symbol_table.set("RUN", BuiltInFunction.run)
+#run
+glb_table = SymbolTable()
+glb_table.set("NULL", Number.null)
+glb_table.set("FALSE", Number.false)
+glb_table.set("TRUE", Number.true)
+glb_table.set("MATH_PI", Number.math_PI)
+glb_table.set("pr", BuiltInFunction.print)
+glb_table.set("pr_RET", BuiltInFunction.print_ret)
+glb_table.set("INPUT", BuiltInFunction.input)
+glb_table.set("INPUT_INT", BuiltInFunction.input_int)
+glb_table.set("CLEAR", BuiltInFunction.clear)
+glb_table.set("CLS", BuiltInFunction.clear)
+glb_table.set("IS_NUM", BuiltInFunction.is_number)
+glb_table.set("IS_STR", BuiltInFunction.is_string)
+glb_table.set("IS_LIST", BuiltInFunction.is_list)
+glb_table.set("IS_FUN", BuiltInFunction.is_function)
+glb_table.set("APPEND", BuiltInFunction.append)
+glb_table.set("POP", BuiltInFunction.pop)
+glb_table.set("EXTEND", BuiltInFunction.extend)
+glb_table.set("LEN", BuiltInFunction.len)
+glb_table.set("RUN", BuiltInFunction.run)
 
 def run(fn, text):
   # Generate tokens
@@ -2162,7 +2145,7 @@ def run(fn, text):
   # Run program
   interpreter = Interpreter()
   context = Context('<program>')
-  context.symbol_table = global_symbol_table
+  context.symbol_table = glb_table
   result = interpreter.visit(ast.node, context)
 
   return result.value, result.error
