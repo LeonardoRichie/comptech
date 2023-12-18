@@ -1,32 +1,33 @@
 #token
+
 from strings_with_arrows import *
 import os
 import math
-Token_INT = 'Token_INT'
-Token_FLOAT = 'FLOAT'
-Token_IDENTIFIER = 'IDENTIFIER'
-Token_KEYWORD = 'KEYWORD'
-Token_PLUS = 'PLUS'
-Token_MINUS = 'MINUS'
-Token_MUL = 'MUL'
-Token_DIV = 'DIV'
-Token_POW = 'POW'
-Token_LPAREN = 'LPAREN'
-Token_RPAREN = 'RPAREN'
-Token_EQ = 'EQ'
-Token_EOF = 'EOF'
-Token_EE = 'EE'
-Token_NE = 'NE'
-Token_LT = 'LT'
-Token_GT = 'GT'
-Token_LTE = 'LTE'
-Token_GTE = 'GTE'
-Token_COMMA = 'COMMA'
-Token_ARROW = 'ARROW'
-Token_STRING = "STRING"
-Token_LSQUARE= "LSQUARE"
-Token_RSQUARE = "RSQUARE"
-Token_NEWLINE = "NEWLINE"
+TOKEN_INT				= 'INT'
+TOKEN_FLOAT    	= 'FLOAT'
+TOKEN_STRING			= 'STRING'
+TOKEN_IDENTIFIER	= 'IDENTIFIER'
+TOKEN_KEYWORD		= 'KEYWORD'
+TOKEN_PLUS     	= 'PLUS'
+TOKEN_MINUS    	= 'MINUS'
+TOKEN_MUL      	= 'MUL'
+TOKEN_DIV      	= 'DIV'
+TOKEN_POW				= 'POW'
+TOKEN_EQ					= 'EQ'
+TOKEN_LPAREN   	= 'LPAREN'
+TOKEN_RPAREN   	= 'RPAREN'
+TOKEN_LSQUARE    = 'LSQUARE'
+TOKEN_RSQUARE    = 'RSQUARE'
+TOKEN_EE					= 'EE'
+TOKEN_NE					= 'NE'
+TOKEN_LT					= 'LT'
+TOKEN_GT					= 'GT'
+TOKEN_LTE				= 'LTE'
+TOKEN_GTE				= 'GTE'
+TOKEN_COMMA			= 'COMMA'
+TOKEN_ARROW			= 'ARROW'
+TOKEN_NEWLINE		= 'NEWLINE'
+TOKEN_EOF				= 'EOF'
 
 
 
@@ -34,8 +35,8 @@ Token_NEWLINE = "NEWLINE"
 #digit
 DIGITS = '0123456789'
 
-KEYWORDS = ['var', 'AND', 'OR', 'NOT', 'IF', 'THEN', 'ELIF', 'ELSE',
-            'FOR', 'TO', 'STEP', 'WHILE', 'FUN', 'END', 'RETURN', 'CONTINUE', 'BREAK' ]
+KEYWORDS = ['var', 'AND', 'OR', 'NOT', 'if', 'th', 'ELIF', 'ELSE',
+            'for', 'TO', 'STEP', 'WHILE', 'fn', 'END', 'RETURN', 'CONTINUE', 'BREAK' ]
 
 import string #import string
 LETTERS = string.ascii_letters
@@ -91,31 +92,34 @@ class RTError(Error):
 
 #position
 class Position:
-	def __init__(self, idx, ln, col, fn, ftxt):
-		self.idx = idx
-		self.ln = ln
-		self.col = col
-		self.fn = fn
-		self.ftxt = ftxt
+  def __init__(self, idx, ln, col, fn, ftxt):
+    self.idx = idx
+    self.ln = ln
+    self.col = col
+    self.fn = fn
+    self.ftxt = ftxt
 
-	def advance(self, current_char=None):
-		self.idx += 1
-		self.col += 1
+  def advance(self, current_char=None):
+    self.idx += 1
+    self.col += 1
 
-		if current_char == '\n':
-			self.ln += 1
-			self.col = 0
+    if current_char == '\n':
+      self.ln += 1
+      self.col = 0
 
-		return self
+    return self
 
-	def copy(self):
-		return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
+  def copy(self):
+    return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
+
+
+#token
 class Token:
   def __init__(self, type_, value=None, pos_start=None, pos_end=None):
     self.type = type_
     self.value = value
 
-    if pos_start:
+    if pos_start:#token movement
       self.pos_start = pos_start.copy()
       self.pos_end = pos_start.copy()
       self.pos_end.advance()
@@ -131,8 +135,7 @@ class Token:
     return f'{self.type}'
 
 
-#LEXER
-class Lexer:
+class Lexer:#lexing
   def __init__(self, fn, text):
     self.fn = fn
     self.text = text
@@ -146,14 +149,14 @@ class Lexer:
 
   def make_tokens(self):
     tokens = []
-#check on every characters
+
     while self.current_char != None:
       if self.current_char in ' \t':
         self.advance()
-      elif self.current_char == '#':
+      elif self.current_char == '#': #comment
         self.skip_comment()
-      elif self.current_char in ';\n':
-        tokens.append(Token(Token_NEWLINE, pos_start=self.pos))
+      elif self.current_char in ';\n':#newline
+        tokens.append(Token(TOKEN_NEWLINE, pos_start=self.pos))
         self.advance()
       elif self.current_char in DIGITS:
         tokens.append(self.make_number())
@@ -162,30 +165,30 @@ class Lexer:
       elif self.current_char == '"':
         tokens.append(self.make_string())
       elif self.current_char == '+':
-        tokens.append(Token(Token_PLUS, pos_start=self.pos))
+        tokens.append(Token(TOKEN_PLUS, pos_start=self.pos))
         self.advance()
       elif self.current_char == '-':
         tokens.append(self.make_minus_or_arrow())
       elif self.current_char == '*':
-        tokens.append(Token(Token_MUL, pos_start=self.pos))
+        tokens.append(Token(TOKEN_MUL, pos_start=self.pos))
         self.advance()
       elif self.current_char == '/':
-        tokens.append(Token(Token_DIV, pos_start=self.pos))
+        tokens.append(Token(TOKEN_DIV, pos_start=self.pos))
         self.advance()
       elif self.current_char == '^':
-        tokens.append(Token(Token_POW, pos_start=self.pos))
+        tokens.append(Token(TOKEN_POW, pos_start=self.pos))
         self.advance()
       elif self.current_char == '(':
-        tokens.append(Token(Token_LPAREN, pos_start=self.pos))
+        tokens.append(Token(TOKEN_LPAREN, pos_start=self.pos))
         self.advance()
       elif self.current_char == ')':
-        tokens.append(Token(Token_RPAREN, pos_start=self.pos))
+        tokens.append(Token(TOKEN_RPAREN, pos_start=self.pos))
         self.advance()
       elif self.current_char == '[':
-        tokens.append(Token(Token_LSQUARE, pos_start=self.pos))
+        tokens.append(Token(TOKEN_LSQUARE, pos_start=self.pos))
         self.advance()
       elif self.current_char == ']':
-        tokens.append(Token(Token_RSQUARE, pos_start=self.pos))
+        tokens.append(Token(TOKEN_RSQUARE, pos_start=self.pos))
         self.advance()
       elif self.current_char == '!':
         token, error = self.make_not_equals()
@@ -198,7 +201,7 @@ class Lexer:
       elif self.current_char == '>':
         tokens.append(self.make_greater_than())
       elif self.current_char == ',':
-        tokens.append(Token(Token_COMMA, pos_start=self.pos))
+        tokens.append(Token(TOKEN_COMMA, pos_start=self.pos))
         self.advance()
       else:
         pos_start = self.pos.copy()
@@ -206,7 +209,7 @@ class Lexer:
         self.advance()
         return [], IllegalCharError(pos_start, self.pos, "'" + char + "'")
 
-    tokens.append(Token(Token_EOF, pos_start=self.pos))
+    tokens.append(Token(TOKEN_EOF, pos_start=self.pos))
     return tokens, None
 
   def make_number(self):
@@ -222,10 +225,9 @@ class Lexer:
       self.advance()
 
     if dot_count == 0:
-      return Token(Token_INT, int(num_str), pos_start, self.pos)
+      return Token(TOKEN_INT, int(num_str), pos_start, self.pos)
     else:
-      return Token(Token_FLOAT, float(num_str), pos_start, self.pos)
-
+      return Token(TOKEN_FLOAT, float(num_str), pos_start, self.pos)
 
   def make_string(self):
     string = ''
@@ -237,7 +239,6 @@ class Lexer:
       'n': '\n',
       't': '\t'
     }
-
 
     while self.current_char != None and (self.current_char != '"' or escape_character):
       if escape_character:
@@ -251,8 +252,7 @@ class Lexer:
       escape_character = False
     
     self.advance()
-    return Token(Token_STRING, string, pos_start, self.pos)
-
+    return Token(TOKEN_STRING, string, pos_start, self.pos)
 
   def make_identifier(self):
     id_str = ''
@@ -262,20 +262,19 @@ class Lexer:
       id_str += self.current_char
       self.advance()
 
-    tok_type = Token_KEYWORD if id_str in KEYWORDS else Token_IDENTIFIER
+    tok_type = TOKEN_KEYWORD if id_str in KEYWORDS else TOKEN_IDENTIFIER
     return Token(tok_type, id_str, pos_start, self.pos)
 
   def make_minus_or_arrow(self):
-    tok_type = Token_MINUS
+    tok_type = TOKEN_MINUS
     pos_start = self.pos.copy()
     self.advance()
 
     if self.current_char == '>':
       self.advance()
-      tok_type = Token_ARROW
+      tok_type = TOKEN_ARROW
 
     return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
 
   def make_not_equals(self):
     pos_start = self.pos.copy()
@@ -283,41 +282,41 @@ class Lexer:
 
     if self.current_char == '=':
       self.advance()
-      return Token(Token_NE, pos_start=pos_start, pos_end=self.pos), None
+      return Token(TOKEN_NE, pos_start=pos_start, pos_end=self.pos), None
 
     self.advance()
     return None, ExpectedCharError(pos_start, self.pos, "'=' (after '!')")
   
   def make_equals(self):
-    tok_type = Token_EQ
+    tok_type = TOKEN_EQ
     pos_start = self.pos.copy()
     self.advance()
 
     if self.current_char == '=':
       self.advance()
-      tok_type = Token_EE
+      tok_type = TOKEN_EE
 
     return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
   def make_less_than(self):
-    tok_type = Token_LT
+    tok_type = TOKEN_LT
     pos_start = self.pos.copy()
     self.advance()
 
     if self.current_char == '=':
       self.advance()
-      tok_type = Token_LTE
+      tok_type = TOKEN_LTE
 
     return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
   def make_greater_than(self):
-    tok_type = Token_GT
+    tok_type = TOKEN_GT
     pos_start = self.pos.copy()
     self.advance()
 
     if self.current_char == '=':
       self.advance()
-      tok_type = Token_GTE
+      tok_type = TOKEN_GTE
 
     return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
 
@@ -329,25 +328,11 @@ class Lexer:
 
     self.advance()
 
+#######################################
+# NODES
+#######################################
 
-
-
-
-#NODES
-#nodes for functions
-class NumberNode: #for number
-  def __init__(self, tok):
-    self.tok = tok
-
-    self.pos_start = self.tok.pos_start
-    self.pos_end = self.tok.pos_end
-
-
-
-  def __repr__(self):
-    return f'{self.tok}'
-
-class StringNode: #for string
+class NumberNode:
   def __init__(self, tok):
     self.tok = tok
 
@@ -357,35 +342,42 @@ class StringNode: #for string
   def __repr__(self):
     return f'{self.tok}'
 
-class ListNode:#for list
+class StringNode:
+  def __init__(self, tok):
+    self.tok = tok
+
+    self.pos_start = self.tok.pos_start
+    self.pos_end = self.tok.pos_end
+
+  def __repr__(self):
+    return f'{self.tok}'
+
+class ListNode:
   def __init__(self, element_nodes, pos_start, pos_end):
     self.element_nodes = element_nodes
 
     self.pos_start = pos_start
     self.pos_end = pos_end
 
-class VarAccessNode: #accessing variable
-  
+class VarAccessNode:
   def __init__(self, var_name_tok):
     self.var_name_tok = var_name_tok
 
     self.pos_start = self.var_name_tok.pos_start
     self.pos_end = self.var_name_tok.pos_end
 
-class VarAssignNode: #assigning variable
+class VarAssignNode:
   def __init__(self, var_name_tok, value_node):
     self.var_name_tok = var_name_tok
     self.value_node = value_node
 
-
     self.pos_start = self.var_name_tok.pos_start
     self.pos_end = self.value_node.pos_end
 
-class BinOpNode: #for binary operator
+class BinOpNode:
   def __init__(self, left_node, op_tok, right_node):
     self.left_node = left_node
     self.op_tok = op_tok
- 
     self.right_node = right_node
 
     self.pos_start = self.left_node.pos_start
@@ -399,14 +391,13 @@ class UnaryOpNode:
     self.op_tok = op_tok
     self.node = node
 
-
     self.pos_start = self.op_tok.pos_start
     self.pos_end = node.pos_end
 
   def __repr__(self):
     return f'({self.op_tok}, {self.node})'
 
-class IfNode: #for if
+class IfNode:
   def __init__(self, cases, else_case):
     self.cases = cases
     self.else_case = else_case
@@ -414,22 +405,19 @@ class IfNode: #for if
     self.pos_start = self.cases[0][0].pos_start
     self.pos_end = (self.else_case or self.cases[len(self.cases) - 1])[0].pos_end
 
-class ForNode: #for for loop
+class ForNode:
   def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
     self.var_name_tok = var_name_tok
     self.start_value_node = start_value_node
- 
-  
     self.end_value_node = end_value_node
     self.step_value_node = step_value_node
     self.body_node = body_node
     self.should_return_null = should_return_null
 
     self.pos_start = self.var_name_tok.pos_start
-  
     self.pos_end = self.body_node.pos_end
 
-class WhileNode: #for while note
+class WhileNode:
   def __init__(self, condition_node, body_node, should_return_null):
     self.condition_node = condition_node
     self.body_node = body_node
@@ -438,11 +426,10 @@ class WhileNode: #for while note
     self.pos_start = self.condition_node.pos_start
     self.pos_end = self.body_node.pos_end
 
-class FuncDefNode: #for function definition
+class FuncDefNode:
   def __init__(self, var_name_tok, arg_name_toks, body_node, should_auto_return):
     self.var_name_tok = var_name_tok
     self.arg_name_toks = arg_name_toks
-  
     self.body_node = body_node
     self.should_auto_return = should_auto_return
 
@@ -457,7 +444,6 @@ class FuncDefNode: #for function definition
 
 class CallNode:
   def __init__(self, node_to_call, arg_nodes):
-  
     self.node_to_call = node_to_call
     self.arg_nodes = arg_nodes
 
@@ -468,33 +454,27 @@ class CallNode:
     else:
       self.pos_end = self.node_to_call.pos_end
 
-
 class ReturnNode:
   def __init__(self, node_to_return, pos_start, pos_end):
-  
     self.node_to_return = node_to_return
 
     self.pos_start = pos_start
     self.pos_end = pos_end
-
 
 class ContinueNode:
   def __init__(self, pos_start, pos_end):
     self.pos_start = pos_start
     self.pos_end = pos_end
 
-
-
-
 class BreakNode:
   def __init__(self, pos_start, pos_end):
     self.pos_start = pos_start
     self.pos_end = pos_end
 
+#######################################
+# PARSE RESULT
+#######################################
 
-
-
-#PARSERES
 class ParseResult:
   def __init__(self):
     self.error = None
@@ -503,7 +483,7 @@ class ParseResult:
     self.advance_count = 0
     self.to_reverse_count = 0
 
-  def register_adv(self):
+  def register_advancement(self):
     self.last_registered_advance_count = 1
     self.advance_count += 1
 
@@ -528,9 +508,11 @@ class ParseResult:
       self.error = error
     return self
 
+#######################################
+# PARSER
+#######################################
 
-
-class Parser:#PARSER
+class Parser:
   def __init__(self, tokens):
     self.tokens = tokens
     self.tok_idx = -1
@@ -552,24 +534,22 @@ class Parser:#PARSER
 
   def parse(self):
     res = self.statements()
-    if not res.error and self.current_tok.type != Token_EOF:
+    if not res.error and self.current_tok.type != TOKEN_EOF:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         "Token cannot appear after previous tokens"
       ))
     return res
 
- 
- 
- 
+  ###################################
 
   def statements(self):
     res = ParseResult()
     statements = []
     pos_start = self.current_tok.pos_start.copy()
 
-    while self.current_tok.type == Token_NEWLINE:
-      res.register_adv()
+    while self.current_tok.type == TOKEN_NEWLINE:
+      res.register_advancement()
       self.advance()
 
     statement = res.register(self.statement())
@@ -580,8 +560,8 @@ class Parser:#PARSER
 
     while True:
       newline_count = 0
-      while self.current_tok.type == Token_NEWLINE:
-        res.register_adv()
+      while self.current_tok.type == TOKEN_NEWLINE:
+        res.register_advancement()
         self.advance()
         newline_count += 1
       if newline_count == 0:
@@ -605,8 +585,8 @@ class Parser:#PARSER
     res = ParseResult()
     pos_start = self.current_tok.pos_start.copy()
 
-    if self.current_tok.matches(Token_KEYWORD, 'RETURN'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'RETURN'):
+      res.register_advancement()
       self.advance()
 
       expr = res.try_register(self.expr())
@@ -614,13 +594,13 @@ class Parser:#PARSER
         self.reverse(res.to_reverse_count)
       return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
     
-    if self.current_tok.matches(Token_KEYWORD, 'CONTINUE'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'CONTINUE'):
+      res.register_advancement()
       self.advance()
       return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
       
-    if self.current_tok.matches(Token_KEYWORD, 'BREAK'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'BREAK'):
+      res.register_advancement()
       self.advance()
       return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
 
@@ -628,92 +608,83 @@ class Parser:#PARSER
     if res.error:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        "Expected 'RETURN', 'CONTINUE', 'BREAK', 'var', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+        "Expected 'RETURN', 'CONTINUE', 'BREAK', 'var', 'if', 'for', 'WHILE', 'fn', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
       ))
     return res.success(expr)
-
-
-
-
 
   def expr(self):
     res = ParseResult()
 
-    if self.current_tok.matches(Token_KEYWORD, 'var'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'var'):
+      res.register_advancement()
       self.advance()
 
-      if self.current_tok.type != Token_IDENTIFIER:
+      if self.current_tok.type != TOKEN_IDENTIFIER:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           "Expected identifier"
         ))
 
       var_name = self.current_tok
-      res.register_adv()
+      res.register_advancement()
       self.advance()
 
-      if self.current_tok.type != Token_EQ:
+      if self.current_tok.type != TOKEN_EQ:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           "Expected '='"
         ))
 
-      res.register_adv()
+      res.register_advancement()
       self.advance()
       expr = res.register(self.expr())
       if res.error: return res
       return res.success(VarAssignNode(var_name, expr))
 
-    node = res.register(self.bin_op(self.comp_expr, ((Token_KEYWORD, 'AND'), (Token_KEYWORD, 'OR'))))
+    node = res.register(self.bin_op(self.comp_expr, ((TOKEN_KEYWORD, 'AND'), (TOKEN_KEYWORD, 'OR'))))
 
     if res.error:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        "Expected 'var', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+        "Expected 'var', 'if', 'for', 'WHILE', 'fn', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
       ))
 
-
-
     return res.success(node)
-
 
   def comp_expr(self):
     res = ParseResult()
 
-    if self.current_tok.matches(Token_KEYWORD, 'NOT'):
+    if self.current_tok.matches(TOKEN_KEYWORD, 'NOT'):
       op_tok = self.current_tok
-      res.register_adv()
-      
+      res.register_advancement()
       self.advance()
 
       node = res.register(self.comp_expr())
       if res.error: return res
       return res.success(UnaryOpNode(op_tok, node))
     
-    node = res.register(self.bin_op(self.arith_expr, (Token_EE, Token_NE, Token_LT, Token_GT, Token_LTE, Token_GTE)))
+    node = res.register(self.bin_op(self.arith_expr, (TOKEN_EE, TOKEN_NE, TOKEN_LT, TOKEN_GT, TOKEN_LTE, TOKEN_GTE)))
     
     if res.error:
       return res.failure(InvalidSyntaxError(
-       
         self.current_tok.pos_start, self.current_tok.pos_end,
-        "Expected int, float, identifier, '+', '-', '(', '[', 'IF', 'FOR', 'WHILE', 'FUN' or 'NOT'"
+        "Expected int, float, identifier, '+', '-', '(', '[', 'if', 'for', 'WHILE', 'fn' or 'NOT'"
       ))
 
     return res.success(node)
 
   def arith_expr(self):
-    return self.bin_op(self.term, (Token_PLUS, Token_MINUS))
+    return self.bin_op(self.term, (TOKEN_PLUS, TOKEN_MINUS))
 
   def term(self):
-    return self.bin_op(self.factor, (Token_MUL, Token_DIV))
+    return self.bin_op(self.factor, (TOKEN_MUL, TOKEN_DIV))
 
   def factor(self):
     res = ParseResult()
     tok = self.current_tok
 
-    if tok.type in (Token_PLUS, Token_MINUS):
-      res.register_adv()
+    if tok.type in (TOKEN_PLUS, TOKEN_MINUS):
+      res.register_advancement()
       self.advance()
       factor = res.register(self.factor())
       if res.error: return res
@@ -722,76 +693,73 @@ class Parser:#PARSER
     return self.power()
 
   def power(self):
-    return self.bin_op(self.call, (Token_POW, ), self.factor)
+    return self.bin_op(self.call, (TOKEN_POW, ), self.factor)
 
   def call(self):
     res = ParseResult()
     atom = res.register(self.atom())
     if res.error: return res
 
-    if self.current_tok.type == Token_LPAREN:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_LPAREN:
+      res.register_advancement()
       self.advance()
       arg_nodes = []
 
-      if self.current_tok.type == Token_RPAREN:
-        res.register_adv()
+      if self.current_tok.type == TOKEN_RPAREN:
+        res.register_advancement()
         self.advance()
       else:
         arg_nodes.append(res.register(self.expr()))
         if res.error:
           return res.failure(InvalidSyntaxError(
             self.current_tok.pos_start, self.current_tok.pos_end,
-            "Expected ')', 'var', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+            "Expected ')', 'var', 'if', 'for', 'WHILE', 'fn', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
           ))
 
-        while self.current_tok.type == Token_COMMA:
-          res.register_adv()
+        while self.current_tok.type == TOKEN_COMMA:
+          res.register_advancement()
           self.advance()
 
           arg_nodes.append(res.register(self.expr()))
           if res.error: return res
 
-        if self.current_tok.type != Token_RPAREN:
+        if self.current_tok.type != TOKEN_RPAREN:
           return res.failure(InvalidSyntaxError(
             self.current_tok.pos_start, self.current_tok.pos_end,
             f"Expected ',' or ')'"
           ))
 
-        res.register_adv()
+        res.register_advancement()
         self.advance()
       return res.success(CallNode(atom, arg_nodes))
     return res.success(atom)
-
-
-
 
   def atom(self):
     res = ParseResult()
     tok = self.current_tok
 
-    if tok.type in (Token_INT, Token_FLOAT):
-      res.register_adv()
+    if tok.type in (TOKEN_INT, TOKEN_FLOAT):
+      res.register_advancement()
       self.advance()
       return res.success(NumberNode(tok))
 
-    elif tok.type == Token_STRING:
-      res.register_adv()
+    elif tok.type == TOKEN_STRING:
+      res.register_advancement()
       self.advance()
       return res.success(StringNode(tok))
 
-    elif tok.type == Token_IDENTIFIER:
-      res.register_adv()
+    elif tok.type == TOKEN_IDENTIFIER:
+      res.register_advancement()
       self.advance()
       return res.success(VarAccessNode(tok))
 
-    elif tok.type == Token_LPAREN:
-      res.register_adv()
+    elif tok.type == TOKEN_LPAREN:
+      res.register_advancement()
       self.advance()
       expr = res.register(self.expr())
       if res.error: return res
-      if self.current_tok.type == Token_RPAREN:
-        res.register_adv()
+      if self.current_tok.type == TOKEN_RPAREN:
+        res.register_advancement()
         self.advance()
         return res.success(expr)
       else:
@@ -800,36 +768,34 @@ class Parser:#PARSER
           "Expected ')'"
         ))
 
-
-
-    elif tok.type == Token_LSQUARE:
+    elif tok.type == TOKEN_LSQUARE:
       list_expr = res.register(self.list_expr())
       if res.error: return res
       return res.success(list_expr)
     
-    elif tok.matches(Token_KEYWORD, 'IF'):
+    elif tok.matches(TOKEN_KEYWORD, 'if'):
       if_expr = res.register(self.if_expr())
       if res.error: return res
       return res.success(if_expr)
 
-    elif tok.matches(Token_KEYWORD, 'FOR'):
+    elif tok.matches(TOKEN_KEYWORD, 'for'):
       for_expr = res.register(self.for_expr())
       if res.error: return res
       return res.success(for_expr)
 
-    elif tok.matches(Token_KEYWORD, 'WHILE'):
+    elif tok.matches(TOKEN_KEYWORD, 'WHILE'):
       while_expr = res.register(self.while_expr())
       if res.error: return res
       return res.success(while_expr)
 
-    elif tok.matches(Token_KEYWORD, 'FUN'):
+    elif tok.matches(TOKEN_KEYWORD, 'fn'):
       func_def = res.register(self.func_def())
       if res.error: return res
       return res.success(func_def)
 
     return res.failure(InvalidSyntaxError(
       tok.pos_start, tok.pos_end,
-      "Expected int, float, identifier, '+', '-', '(', '[', IF', 'FOR', 'WHILE', 'FUN'"
+      "Expected int, float, identifier, '+', '-', '(', '[', if', 'for', 'WHILE', 'fn'"
     ))
 
   def list_expr(self):
@@ -837,41 +803,40 @@ class Parser:#PARSER
     element_nodes = []
     pos_start = self.current_tok.pos_start.copy()
 
-    if self.current_tok.type != Token_LSQUARE:
+    if self.current_tok.type != TOKEN_LSQUARE:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected '['"
       ))
 
-   
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_RSQUARE:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_RSQUARE:
+      res.register_advancement()
       self.advance()
     else:
       element_nodes.append(res.register(self.expr()))
       if res.error:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
-          "Expected ']', 'var', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
+          "Expected ']', 'var', 'if', 'for', 'WHILE', 'fn', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
         ))
 
-      while self.current_tok.type == Token_COMMA:
-        res.register_adv()
+      while self.current_tok.type == TOKEN_COMMA:
+        res.register_advancement()
         self.advance()
 
         element_nodes.append(res.register(self.expr()))
         if res.error: return res
 
-      if self.current_tok.type != Token_RSQUARE:
+      if self.current_tok.type != TOKEN_RSQUARE:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected ',' or ']'"
         ))
 
-      res.register_adv()
+      res.register_advancement()
       self.advance()
 
     return res.success(ListNode(
@@ -882,7 +847,7 @@ class Parser:#PARSER
 
   def if_expr(self):
     res = ParseResult()
-    all_cases = res.register(self.if_expr_cases('IF'))
+    all_cases = res.register(self.if_expr_cases('if'))
     if res.error: return res
     cases, else_case = all_cases
     return res.success(IfNode(cases, else_case))
@@ -894,20 +859,20 @@ class Parser:#PARSER
     res = ParseResult()
     else_case = None
 
-    if self.current_tok.matches(Token_KEYWORD, 'ELSE'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'ELSE'):
+      res.register_advancement()
       self.advance()
 
-      if self.current_tok.type == Token_NEWLINE:
-        res.register_adv()
+      if self.current_tok.type == TOKEN_NEWLINE:
+        res.register_advancement()
         self.advance()
 
         statements = res.register(self.statements())
         if res.error: return res
         else_case = (statements, True)
 
-        if self.current_tok.matches(Token_KEYWORD, 'END'):
-          res.register_adv()
+        if self.current_tok.matches(TOKEN_KEYWORD, 'END'):
+          res.register_advancement()
           self.advance()
         else:
           return res.failure(InvalidSyntaxError(
@@ -919,14 +884,13 @@ class Parser:#PARSER
         if res.error: return res
         else_case = (expr, False)
 
-
     return res.success(else_case)
 
   def if_expr_b_or_c(self):
     res = ParseResult()
     cases, else_case = [], None
 
-    if self.current_tok.matches(Token_KEYWORD, 'ELIF'):
+    if self.current_tok.matches(TOKEN_KEYWORD, 'ELIF'):
       all_cases = res.register(self.if_expr_b())
       if res.error: return res
       cases, else_case = all_cases
@@ -936,46 +900,42 @@ class Parser:#PARSER
     
     return res.success((cases, else_case))
 
-
   def if_expr_cases(self, case_keyword):
     res = ParseResult()
     cases = []
     else_case = None
 
-    if not self.current_tok.matches(Token_KEYWORD, case_keyword):
+    if not self.current_tok.matches(TOKEN_KEYWORD, case_keyword):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected '{case_keyword}'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
     condition = res.register(self.expr())
     if res.error: return res
 
-
-
-
-    if not self.current_tok.matches(Token_KEYWORD, 'THEN'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'th'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        f"Expected 'THEN'"
+        f"Expected 'th'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_NEWLINE:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_NEWLINE:
+      res.register_advancement()
       self.advance()
 
       statements = res.register(self.statements())
       if res.error: return res
       cases.append((condition, statements, True))
 
-      if self.current_tok.matches(Token_KEYWORD, 'END'):
-        res.register_adv()
+      if self.current_tok.matches(TOKEN_KEYWORD, 'END'):
+        res.register_advancement()
         self.advance()
       else:
         all_cases = res.register(self.if_expr_b_or_c())
@@ -997,54 +957,51 @@ class Parser:#PARSER
   def for_expr(self):
     res = ParseResult()
 
-    if not self.current_tok.matches(Token_KEYWORD, 'FOR'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'for'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        f"Expected 'FOR'"
+        f"Expected 'for'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type != Token_IDENTIFIER:
+    if self.current_tok.type != TOKEN_IDENTIFIER:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected identifier"
       ))
 
-
-
-
     var_name = self.current_tok
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type != Token_EQ:
+    if self.current_tok.type != TOKEN_EQ:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected '='"
       ))
     
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
     start_value = res.register(self.expr())
     if res.error: return res
 
-    if not self.current_tok.matches(Token_KEYWORD, 'TO'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'TO'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected 'TO'"
       ))
     
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
     end_value = res.register(self.expr())
     if res.error: return res
 
-    if self.current_tok.matches(Token_KEYWORD, 'STEP'):
-      res.register_adv()
+    if self.current_tok.matches(TOKEN_KEYWORD, 'STEP'):
+      res.register_advancement()
       self.advance()
 
       step_value = res.register(self.expr())
@@ -1052,33 +1009,29 @@ class Parser:#PARSER
     else:
       step_value = None
 
-    if not self.current_tok.matches(Token_KEYWORD, 'THEN'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'th'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        f"Expected 'THEN'"
+        f"Expected 'th'"
       ))
 
-
-
-
-
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_NEWLINE:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_NEWLINE:
+      res.register_advancement()
       self.advance()
 
       body = res.register(self.statements())
       if res.error: return res
 
-      if not self.current_tok.matches(Token_KEYWORD, 'END'):
+      if not self.current_tok.matches(TOKEN_KEYWORD, 'END'):
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected 'END'"
         ))
 
-      res.register_adv()
+      res.register_advancement()
       self.advance()
 
       return res.success(ForNode(var_name, start_value, end_value, step_value, body, True))
@@ -1091,45 +1044,41 @@ class Parser:#PARSER
   def while_expr(self):
     res = ParseResult()
 
-    if not self.current_tok.matches(Token_KEYWORD, 'WHILE'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'WHILE'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected 'WHILE'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
     condition = res.register(self.expr())
     if res.error: return res
 
-    if not self.current_tok.matches(Token_KEYWORD, 'THEN'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'th'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        f"Expected 'THEN'"
+        f"Expected 'th'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_NEWLINE:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_NEWLINE:
+      res.register_advancement()
       self.advance()
 
       body = res.register(self.statements())
       if res.error: return res
 
-      if not self.current_tok.matches(Token_KEYWORD, 'END'):
+      if not self.current_tok.matches(TOKEN_KEYWORD, 'END'):
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected 'END'"
         ))
 
-
-
-
-
-      res.register_adv()
+      res.register_advancement()
       self.advance()
 
       return res.success(WhileNode(condition, body, True))
@@ -1142,75 +1091,72 @@ class Parser:#PARSER
   def func_def(self):
     res = ParseResult()
 
-    if not self.current_tok.matches(Token_KEYWORD, 'FUN'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'fn'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
-        f"Expected 'FUN'"
+        f"Expected 'fn'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_IDENTIFIER:
+    if self.current_tok.type == TOKEN_IDENTIFIER:
       var_name_tok = self.current_tok
-      res.register_adv()
+      res.register_advancement()
       self.advance()
-      if self.current_tok.type != Token_LPAREN:
+      if self.current_tok.type != TOKEN_LPAREN:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected '('"
         ))
     else:
       var_name_tok = None
-      if self.current_tok.type != Token_LPAREN:
+      if self.current_tok.type != TOKEN_LPAREN:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected identifier or '('"
         ))
     
-    res.register_adv()
+    res.register_advancement()
     self.advance()
     arg_name_toks = []
 
-    if self.current_tok.type == Token_IDENTIFIER:
+    if self.current_tok.type == TOKEN_IDENTIFIER:
       arg_name_toks.append(self.current_tok)
-      res.register_adv()
+      res.register_advancement()
       self.advance()
       
-      while self.current_tok.type == Token_COMMA:
-        res.register_adv()
+      while self.current_tok.type == TOKEN_COMMA:
+        res.register_advancement()
         self.advance()
 
-        if self.current_tok.type != Token_IDENTIFIER:
+        if self.current_tok.type != TOKEN_IDENTIFIER:
           return res.failure(InvalidSyntaxError(
             self.current_tok.pos_start, self.current_tok.pos_end,
             f"Expected identifier"
           ))
 
-
-
-
         arg_name_toks.append(self.current_tok)
-        res.register_adv()
+        res.register_advancement()
         self.advance()
       
-      if self.current_tok.type != Token_RPAREN:
+      if self.current_tok.type != TOKEN_RPAREN:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected ',' or ')'"
         ))
     else:
-      if self.current_tok.type != Token_RPAREN:
+      if self.current_tok.type != TOKEN_RPAREN:
         return res.failure(InvalidSyntaxError(
           self.current_tok.pos_start, self.current_tok.pos_end,
           f"Expected identifier or ')'"
         ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
-    if self.current_tok.type == Token_ARROW:
-      res.register_adv()
+    if self.current_tok.type == TOKEN_ARROW:
+      res.register_advancement()
       self.advance()
 
       body = res.register(self.expr())
@@ -1223,28 +1169,25 @@ class Parser:#PARSER
         True
       ))
     
-    if self.current_tok.type != Token_NEWLINE:
+    if self.current_tok.type != TOKEN_NEWLINE:
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected '->' or NEWLINE"
       ))
 
-
-
-
-    res.register_adv()
+    res.register_advancement()
     self.advance()
 
     body = res.register(self.statements())
     if res.error: return res
 
-    if not self.current_tok.matches(Token_KEYWORD, 'END'):
+    if not self.current_tok.matches(TOKEN_KEYWORD, 'END'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
         f"Expected 'END'"
       ))
 
-    res.register_adv()
+    res.register_advancement()
     self.advance()
     
     return res.success(FuncDefNode(
@@ -1256,8 +1199,6 @@ class Parser:#PARSER
 
   ###################################
 
-
-
   def bin_op(self, func_a, ops, func_b=None):
     if func_b == None:
       func_b = func_a
@@ -1268,7 +1209,7 @@ class Parser:#PARSER
 
     while self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops:
       op_tok = self.current_tok
-      res.register_adv()
+      res.register_advancement()
       self.advance()
       right = res.register(func_b())
       if res.error: return res
@@ -1276,7 +1217,10 @@ class Parser:#PARSER
 
     return res.success(left)
 
-#RUNTIME
+#######################################
+# RUNTIME RESULT
+#######################################
+
 class RTResult:
   def __init__(self):
     self.reset()
@@ -1321,14 +1265,17 @@ class RTResult:
     return self
 
   def should_return(self):
-    #CONTINUE N BREAK
+    # Note: this will allow you to continue and break outside the current function
     return (
       self.error or
       self.func_return_value or
       self.loop_should_continue or
       self.loop_should_break
     )
-#VALUES
+
+#######################################
+# VALUES
+#######################################
 
 class Value:
   def __init__(self):
@@ -1890,9 +1837,9 @@ BuiltInFunction.extend      = BuiltInFunction("extend")
 BuiltInFunction.len					= BuiltInFunction("len")
 BuiltInFunction.run					= BuiltInFunction("run")
 
-
-
-
+#######################################
+# CONTEXT
+#######################################
 
 class Context:
   def __init__(self, display_name, parent=None, parent_entry_pos=None):
@@ -1900,7 +1847,11 @@ class Context:
     self.parent = parent
     self.parent_entry_pos = parent_entry_pos
     self.symbol_table = None
-    
+
+#######################################
+# SYMBOL TABLE
+#######################################
+
 class SymbolTable:
   def __init__(self, parent=None):
     self.symbols = {}
@@ -1918,9 +1869,11 @@ class SymbolTable:
   def remove(self, name):
     del self.symbols[name]
 
+#######################################
+# INTERPRETER
+#######################################
 
-
-class Interpreter: #interpreter
+class Interpreter:
   def visit(self, node, context):
     method_name = f'visit_{type(node).__name__}'
     method = getattr(self, method_name, self.no_visit_method)
@@ -1929,6 +1882,7 @@ class Interpreter: #interpreter
   def no_visit_method(self, node, context):
     raise Exception(f'No visit_{type(node).__name__} method defined')
 
+  ###################################
 
   def visit_NumberNode(self, node, context):
     return RTResult().success(
@@ -1983,31 +1937,31 @@ class Interpreter: #interpreter
     right = res.register(self.visit(node.right_node, context))
     if res.should_return(): return res
 
-    if node.op_tok.type == Token_PLUS:
+    if node.op_tok.type == TOKEN_PLUS:
       result, error = left.added_to(right)
-    elif node.op_tok.type == Token_MINUS:
+    elif node.op_tok.type == TOKEN_MINUS:
       result, error = left.subbed_by(right)
-    elif node.op_tok.type == Token_MUL:
+    elif node.op_tok.type == TOKEN_MUL:
       result, error = left.multed_by(right)
-    elif node.op_tok.type == Token_DIV:
+    elif node.op_tok.type == TOKEN_DIV:
       result, error = left.dived_by(right)
-    elif node.op_tok.type == Token_POW:
+    elif node.op_tok.type == TOKEN_POW:
       result, error = left.powed_by(right)
-    elif node.op_tok.type == Token_EE:
+    elif node.op_tok.type == TOKEN_EE:
       result, error = left.get_comparison_eq(right)
-    elif node.op_tok.type == Token_NE:
+    elif node.op_tok.type == TOKEN_NE:
       result, error = left.get_comparison_ne(right)
-    elif node.op_tok.type == Token_LT:
+    elif node.op_tok.type == TOKEN_LT:
       result, error = left.get_comparison_lt(right)
-    elif node.op_tok.type == Token_GT:
+    elif node.op_tok.type == TOKEN_GT:
       result, error = left.get_comparison_gt(right)
-    elif node.op_tok.type == Token_LTE:
+    elif node.op_tok.type == TOKEN_LTE:
       result, error = left.get_comparison_lte(right)
-    elif node.op_tok.type == Token_GTE:
+    elif node.op_tok.type == TOKEN_GTE:
       result, error = left.get_comparison_gte(right)
-    elif node.op_tok.matches(Token_KEYWORD, 'AND'):
+    elif node.op_tok.matches(TOKEN_KEYWORD, 'AND'):
       result, error = left.anded_by(right)
-    elif node.op_tok.matches(Token_KEYWORD, 'OR'):
+    elif node.op_tok.matches(TOKEN_KEYWORD, 'OR'):
       result, error = left.ored_by(right)
 
     if error:
@@ -2022,9 +1976,9 @@ class Interpreter: #interpreter
 
     error = None
 
-    if node.op_tok.type == Token_MINUS:
+    if node.op_tok.type == TOKEN_MINUS:
       number, error = number.multed_by(Number(-1))
-    elif node.op_tok.matches(Token_KEYWORD, 'NOT'):
+    elif node.op_tok.matches(TOKEN_KEYWORD, 'NOT'):
       number, error = number.notted()
 
     if error:
@@ -2169,44 +2123,46 @@ class Interpreter: #interpreter
   def visit_BreakNode(self, node, context):
     return RTResult().success_break()
 
+#######################################
+# RUN
+#######################################
 
+global_symbol_table = SymbolTable()
+global_symbol_table.set("NULL", Number.null)
+global_symbol_table.set("FALSE", Number.false)
+global_symbol_table.set("TRUE", Number.true)
+global_symbol_table.set("MATH_PI", Number.math_PI)
+global_symbol_table.set("pr", BuiltInFunction.print)
+global_symbol_table.set("pr_RET", BuiltInFunction.print_ret)
+global_symbol_table.set("INPUT", BuiltInFunction.input)
+global_symbol_table.set("INPUT_INT", BuiltInFunction.input_int)
+global_symbol_table.set("CLEAR", BuiltInFunction.clear)
+global_symbol_table.set("CLS", BuiltInFunction.clear)
+global_symbol_table.set("IS_NUM", BuiltInFunction.is_number)
+global_symbol_table.set("IS_STR", BuiltInFunction.is_string)
+global_symbol_table.set("IS_LIST", BuiltInFunction.is_list)
+global_symbol_table.set("IS_FUN", BuiltInFunction.is_function)
+global_symbol_table.set("APPEND", BuiltInFunction.append)
+global_symbol_table.set("POP", BuiltInFunction.pop)
+global_symbol_table.set("EXTEND", BuiltInFunction.extend)
+global_symbol_table.set("LEN", BuiltInFunction.len)
+global_symbol_table.set("RUN", BuiltInFunction.run)
 
-global_table = SymbolTable()
-global_table.set("NULL", Number.null)
-global_table.set("FALSE", Number.false)
-global_table.set("TRUE", Number.true)
-global_table.set("MATH_PI", Number.math_PI)
-global_table.set("pr", BuiltInFunction.print)
-global_table.set("pr_RET", BuiltInFunction.print_ret)
-global_table.set("INPUT", BuiltInFunction.input)
-global_table.set("INPUT_INT", BuiltInFunction.input_int)
-global_table.set("CLEAR", BuiltInFunction.clear)
-global_table.set("CLS", BuiltInFunction.clear)
-global_table.set("IS_NUM", BuiltInFunction.is_number)
-global_table.set("IS_STR", BuiltInFunction.is_string)
-global_table.set("IS_LIST", BuiltInFunction.is_list)
-global_table.set("IS_FUN", BuiltInFunction.is_function)
-global_table.set("APPEND", BuiltInFunction.append)
-global_table.set("POP", BuiltInFunction.pop)
-global_table.set("EXTEND", BuiltInFunction.extend)
-global_table.set("LEN", BuiltInFunction.len)
-global_table.set("RUN", BuiltInFunction.run)
-#run function
 def run(fn, text):
-  #token n lexing
+  # Generate tokens
   lexer = Lexer(fn, text)
   tokens, error = lexer.make_tokens()
   if error: return None, error
   
-  #parsing
+  # Generate AST
   parser = Parser(tokens)
   ast = parser.parse()
   if ast.error: return None, ast.error
 
-  #run
+  # Run program
   interpreter = Interpreter()
   context = Context('<program>')
-  context.symbol_table = global_table
+  context.symbol_table = global_symbol_table
   result = interpreter.visit(ast.node, context)
 
   return result.value, result.error
