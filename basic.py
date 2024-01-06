@@ -8,30 +8,34 @@ import string
 import os
 import math
 
-
+#digits
 DIGITS = '0123456789'
 LETTERS = string.ascii_letters
 LETTERS_DIGITS = LETTERS + DIGITS
 
-
+#showing error position
 class Error:
   def __init__(self, pos_start, pos_end, error_name, details):
     self.pos_start = pos_start
     self.pos_end = pos_end
+    
     self.error_name = error_name
     self.details = details
   
   def as_string(self):
+    
     result  = f'{self.error_name}: {self.details}\n'
     result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}'
     result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
     return result
 
+#shows different output in the terminal such as illegal char, expected char, invalid syntax, rterror
 class IllegalCharError(Error):
   def __init__(self, pos_start, pos_end, details):
     super().__init__(pos_start, pos_end, 'Illegal Character', details)
 
 class ExpectedCharError(Error):
+  
   def __init__(self, pos_start, pos_end, details):
     super().__init__(pos_start, pos_end, 'Expected Character', details)
 
@@ -45,12 +49,15 @@ class RTError(Error):
     self.context = context
 
   def as_string(self):
+    
     result  = self.generate_traceback()
     result += f'{self.error_name}: {self.details}'
     result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
     return result
 
+#traceback position of the output
   def generate_traceback(self):
+    
     result = ''
     pos = self.pos_start
     ctx = self.context
@@ -62,7 +69,7 @@ class RTError(Error):
 
     return 'Traceback (most recent call last):\n' + result
 
-
+#position n advance position
 class Position:
   def __init__(self, idx, ln, col, fn, ftxt):
     self.idx = idx
@@ -84,7 +91,7 @@ class Position:
   def copy(self):
     return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 
-
+#stating the variables needed for each keyword
 TT_INT				= 'INT'
 TT_FLOAT    	= 'FLOAT'
 TT_STRING			= 'STRING'
@@ -112,22 +119,9 @@ TT_NEWLINE		= 'NEWLINE'
 TT_EOF				= 'EOF'
 
 KEYWORDS = [
-  'VAR',
-  'AND',
-  'OR',
-  'NOT',
-  'IF',
-  'ELIF',
-  'ELSE',
-  'FOR',
-  'TO',
-  'STEP',
-  'WHILE',
-  'FUN',
-  'THEN',
-  'END'
-]
+  'VAR','AND','OR','NOT','IF','ELIF','ELSE','FOR','TO','STEP','WHILE','FUN','THEN','END']
 
+#token movement to tokenize each input
 class Token:
   def __init__(self, type_, value=None, pos_start=None, pos_end=None):
     self.type = type_
@@ -148,6 +142,7 @@ class Token:
     if self.value: return f'{self.type}:{self.value}'
     return f'{self.type}'
 
+#lexing
 class Lexer:
   def __init__(self, fn, text):
     self.fn = fn
@@ -162,7 +157,7 @@ class Lexer:
 
   def make_tokens(self):
     tokens = []
-
+#identify each input with if statements and clasify them 
     while self.current_char != None:
       if self.current_char in ' \t':
         self.advance()
@@ -224,14 +219,15 @@ class Lexer:
 
     tokens.append(Token(TT_EOF, pos_start=self.pos))
     return tokens, None
-
+  
+#identify number rules 
   def make_number(self):
     num_str = ''
     dot_count = 0
     pos_start = self.pos.copy()
 
     while self.current_char != None and self.current_char in DIGITS + '.':
-      if self.current_char == '.':
+      if self.current_char == '.':# if there is a dot between numbers for decimals
         if dot_count == 1: break
         dot_count += 1
       num_str += self.current_char
@@ -242,13 +238,13 @@ class Lexer:
     else:
       return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
 
-  def make_string(self):
+  def make_string(self): #identify strings
     string = ''
     pos_start = self.pos.copy()
     escape_character = False
     self.advance()
 
-    escape_characters = {
+    escape_characters = {#character to be pass
       'n': '\n',
       't': '\t'
     }
@@ -278,6 +274,7 @@ class Lexer:
     tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
     return Token(tok_type, id_str, pos_start, self.pos)
 
+#identify comparison operators
   def make_minus_or_arrow(self):
     tok_type = TT_MINUS
     pos_start = self.pos.copy()
@@ -333,7 +330,7 @@ class Lexer:
 
     return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
   
-  def skip_comment(self):
+  def skip_comment(self): #new line
     self.advance()
 
     while self.current_char != '\n':
@@ -377,6 +374,7 @@ class VarAccessNode:
 
     self.pos_start = self.var_name_tok.pos_start
     self.pos_end = self.var_name_tok.pos_end
+    #accessing variable
 
 class VarAssignNode:
   def __init__(self, var_name_tok, value_node):
@@ -385,6 +383,8 @@ class VarAssignNode:
 
     self.pos_start = self.var_name_tok.pos_start
     self.pos_end = self.value_node.pos_end
+    
+  #assigning variable
 
 class BinOpNode:
   def __init__(self, left_node, op_tok, right_node):
@@ -418,6 +418,7 @@ class IfNode:
     self.pos_end = (self.else_case or self.cases[len(self.cases) - 1])[0].pos_end
 
 class ForNode:
+  #for loop node
   def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
     self.var_name_tok = var_name_tok
     self.start_value_node = start_value_node
@@ -430,6 +431,7 @@ class ForNode:
     self.pos_end = self.body_node.pos_end
 
 class WhileNode:
+  #while node
   def __init__(self, condition_node, body_node, should_return_null):
     self.condition_node = condition_node
     self.body_node = body_node
@@ -439,6 +441,7 @@ class WhileNode:
     self.pos_end = self.body_node.pos_end
 
 class FuncDefNode:
+  #def function mode 
   def __init__(self, var_name_tok, arg_name_toks, body_node, should_return_null):
     self.var_name_tok = var_name_tok
     self.arg_name_toks = arg_name_toks
@@ -455,6 +458,7 @@ class FuncDefNode:
     self.pos_end = self.body_node.pos_end
 
 class CallNode:
+  #call node 
   def __init__(self, node_to_call, arg_nodes):
     self.node_to_call = node_to_call
     self.arg_nodes = arg_nodes
@@ -465,7 +469,6 @@ class CallNode:
       self.pos_end = self.arg_nodes[len(self.arg_nodes) - 1].pos_end
     else:
       self.pos_end = self.node_to_call.pos_end
-
 
 
 
@@ -507,6 +510,7 @@ class ParseResult:
 
 #parser
 class Parser:
+  #check on each token and advance
   def __init__(self, tokens):
     self.tokens = tokens
     self.tok_idx = -1
@@ -536,7 +540,7 @@ class Parser:
     return res
 
   ###################################
-
+  #move to new line 
   def statements(self):
     res = ParseResult()
     statements = []
@@ -576,6 +580,7 @@ class Parser:
     ))
 
   def expr(self):
+    #for variable requires identifier n VAR keyword
     res = ParseResult()
 
     if self.current_tok.matches(TT_KEYWORD, 'VAR'):
@@ -615,6 +620,7 @@ class Parser:
     return res.success(node)
 
   def comp_expr(self):
+    # not comparison
     res = ParseResult()
 
     if self.current_tok.matches(TT_KEYWORD, 'NOT'):
@@ -637,9 +643,11 @@ class Parser:
     return res.success(node)
 
   def arith_expr(self):
+    # plus minus operator
     return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
   def term(self):
+    #multiplicaiton n division operator
     return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
   def factor(self):
@@ -659,6 +667,7 @@ class Parser:
     return self.bin_op(self.call, (TT_POW, ), self.factor)
 
   def call(self):
+    #identify parenthesese, comma token
     res = ParseResult()
     atom = res.register(self.atom())
     if res.error: return res
@@ -698,6 +707,7 @@ class Parser:
     return res.success(atom)
 
   def atom(self):
+    #registering each token and advance
     res = ParseResult()
     tok = self.current_tok
 
@@ -761,6 +771,7 @@ class Parser:
       "Expected int, float, identifier, '+', '-', '(', '[', IF', 'FOR', 'WHILE', 'FUN'"
     ))
 
+  #list requires [ ] token or else error
   def list_expr(self):
     res = ParseResult()
     element_nodes = []
@@ -785,7 +796,7 @@ class Parser:
           self.current_tok.pos_start, self.current_tok.pos_end,
           "Expected ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"
         ))
-
+    #comma inside the list between contents
       while self.current_tok.type == TT_COMMA:
         res.register_advancement()
         self.advance()
@@ -808,6 +819,7 @@ class Parser:
       self.current_tok.pos_end.copy()
     ))
 
+#if expression, elif n else
   def if_expr(self):
     res = ParseResult()
     all_cases = res.register(self.if_expr_cases('IF'))
@@ -1004,6 +1016,7 @@ class Parser:
 
     return res.success(ForNode(var_name, start_value, end_value, step_value, body, False))
 
+#while rules
   def while_expr(self):
     res = ParseResult()
 
@@ -1051,9 +1064,10 @@ class Parser:
 
     return res.success(WhileNode(condition, body, False))
 
+#function rules and check its contents
   def func_def(self):
     res = ParseResult()
-
+  #requires fun keyword
     if not self.current_tok.matches(TT_KEYWORD, 'FUN'):
       return res.failure(InvalidSyntaxError(
         self.current_tok.pos_start, self.current_tok.pos_end,
@@ -1161,7 +1175,7 @@ class Parser:
     ))
 
   ###################################
-
+#binary operator function
   def bin_op(self, func_a, ops, func_b=None):
     if func_b == None:
       func_b = func_a
@@ -1274,7 +1288,8 @@ class Value:
       'Illegal operation',
       self.context
     )
-
+#numbers
+#comparison and operations are included 
 class Number(Value):
   def __init__(self, value):
     super().__init__()
@@ -1387,6 +1402,7 @@ Number.null = Number(0)
 Number.false = Number(0)
 Number.true = Number(1)
 
+#string class and its function adding, multiply, 
 class String(Value):
   def __init__(self, value):
     super().__init__()
@@ -1419,6 +1435,7 @@ class String(Value):
   def __repr__(self):
     return f'"{self.value}"'
 
+#list class can add and substract its content
 class List(Value):
   def __init__(self, elements):
     super().__init__()
@@ -1477,6 +1494,7 @@ class List(Value):
   def __repr__(self):
     return f'[{", ".join([repr(x) for x in self.elements])}]'
 
+#function class to run
 class BaseFunction(Value):
   def __init__(self, name):
     super().__init__()
@@ -1487,6 +1505,7 @@ class BaseFunction(Value):
     new_context.symbol_table = SymbolTable(new_context.parent.symbol_table)
     return new_context
 
+#argument checker
   def check_args(self, arg_names, args):
     res = RTResult()
 
@@ -1520,6 +1539,7 @@ class BaseFunction(Value):
     self.populate_args(arg_names, args, exec_ctx)
     return res.success(None)
 
+#fucntion class 
 class Function(BaseFunction):
   def __init__(self, name, body_node, arg_names, should_return_null):
     super().__init__(name)
@@ -1548,6 +1568,7 @@ class Function(BaseFunction):
   def __repr__(self):
     return f"<function {self.name}>"
 
+#built in function that are available(not created by the user)
 class BuiltInFunction(BaseFunction):
   def __init__(self, name):
     super().__init__(name)
@@ -1781,6 +1802,7 @@ class Interpreter:
       List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
     )
 
+#accessing the variable 
   def visit_VarAccessNode(self, node, context):
     res = RTResult()
     var_name = node.var_name_tok.value
@@ -1796,6 +1818,7 @@ class Interpreter:
     value = value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
     return res.success(value)
 
+
   def visit_VarAssignNode(self, node, context):
     res = RTResult()
     var_name = node.var_name_tok.value
@@ -1804,7 +1827,7 @@ class Interpreter:
 
     context.symbol_table.set(var_name, value)
     return res.success(value)
-
+#binary operation and run the operation if its based on the token
   def visit_BinOpNode(self, node, context):
     res = RTResult()
     left = res.register(self.visit(node.left_node, context))
@@ -1861,6 +1884,7 @@ class Interpreter:
     else:
       return res.success(number.set_pos(node.pos_start, node.pos_end))
 
+#if node if its a true or false
   def visit_IfNode(self, node, context):
     res = RTResult()
 
@@ -1881,6 +1905,7 @@ class Interpreter:
 
     return res.success(Number.null)
 
+#for node start, end node
   def visit_ForNode(self, node, context):
     res = RTResult()
     elements = []
@@ -1915,7 +1940,7 @@ class Interpreter:
       Number.null if node.should_return_null else
       List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
     )
-
+#while node , keep running while its true
   def visit_WhileNode(self, node, context):
     res = RTResult()
     elements = []
@@ -1934,6 +1959,7 @@ class Interpreter:
       List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
     )
 
+#function node, set the context and run the contents of the function 
   def visit_FuncDefNode(self, node, context):
     res = RTResult()
 
@@ -1967,6 +1993,7 @@ class Interpreter:
 
 
 #run func
+#global variabble setting 
 global_symbol_table = SymbolTable()
 global_symbol_table.set("NULL", Number.null)
 global_symbol_table.set("FALSE", Number.false)
